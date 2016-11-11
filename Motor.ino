@@ -102,7 +102,7 @@ void turn(int rotate_type) {
   if (target < 0) target += 360;
   if (target >= 360) target -= 360;
 
-  while (abs(temp - target) >= 4) {
+  while (abs(temp - target) >= 5) {
     temp = getCurrDegree();
     Serial.println(temp);
     Drive(L, speed);
@@ -117,25 +117,33 @@ void turn(int rotate_type) {
   //Serial.println("Finish");
 }
 
+void setHarmonics() { //S2CA triburst!!!!
+  int dir;
+  int temp = getCurrDegree() - currDegree;
+  int Speed;
+  if(temp < -180) dir = L;
+  else if(temp > 180) dir = R;
+  else if(temp > 0) dir = L;
+  else dir = R;
+
+  if(dir == L) Speed = -100;
+  else Speed = 100;
+
+  temp = getCurrDegree();
+  while (1) {
+    temp = getCurrDegree();
+    Drive(L, Speed);
+    Drive(R, -Speed);
+    delay(50);
+    Stop(70);
+    if(abs(temp - currDegree) <= 7 || abs(temp - currDegree) >= 353) break;
+  }
+}
+
 void loop() {
-
-  /*
-    while (!start) {
-    Vector mag = compass.readRaw();
-
-    // Determine Min / Max values
-    if (mag.XAxis < minX) minX = mag.XAxis;
-    if (mag.XAxis > maxX) maxX = mag.XAxis;
-    if (mag.YAxis < minY) minY = mag.YAxis;
-    if (mag.YAxis > maxY) maxY = mag.YAxis;
-
-    // Calculate offsets
-    offX = (maxX + minX) / 2;
-    offY = (maxY + minY) / 2;
-    if (!digitalRead(6)) start = 1;
-    }
-  */
-  //compass.setOffset(offX, offY);
+  int warp = abs(getCurrDegree() - currDegree);
+  if(warp > 180) warp = abs(warp - 360);
+  if(warp > 20) setHarmonics();
   Serial.println(getCurrDegree());
   //get measurement data from sensors
   dis_left = sonarL.ping_cm();
@@ -145,7 +153,7 @@ void loop() {
   if (dis_left == 0) {
     Drive(L, 100);
     Drive(R, 100);
-    delay(300);
+    delay(200);
     Stop(100);
     turn(COUNTER_CLOCKWISE);
     Drive(L, 100);
@@ -163,9 +171,16 @@ void loop() {
       Stop(100);
     }
     else {
-      turn(CLOCKWISE);
-      delay(500);
-      turn(CLOCKWISE);
+      if(dis_left < dis_right) {
+        turn(CLOCKWISE);
+        delay(100);
+        turn(CLOCKWISE);
+      }
+      else {
+        turn(COUNTER_CLOCKWISE);
+        delay(100);
+        turn(COUNTER_CLOCKWISE);
+      }
     }
   }
 
