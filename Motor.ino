@@ -1,3 +1,5 @@
+
+
 #include <HMC5883L.h>
 #include <NewPing.h>
 #include <Wire.h>
@@ -61,7 +63,7 @@ const int RM2 = 5;
 const int LM1 = 6;
 const int LM2 = 7;
 const int LB = 30;
-const int RB = 40;
+const int RB = 45;
 const int Lstep = 23;
 const int Rstep = 25;
 int cnt;
@@ -121,6 +123,13 @@ float getCurrDegree() {
   return heading * 180 / M_PI;
 }
 
+int getWarp() {
+  int warp = abs(getCurrDegree() - currDegree);
+  if (warp > 180) warp = abs(warp - 360);
+
+  return warp;
+}
+
 void turn(int rotate_type) {
   float temp, target = currDegree + (rotate_type ? -90 : 90);
   int speed = rotate_type ? -70 : 70;
@@ -149,7 +158,7 @@ void turn(int rotate_type) {
   LEDMatrix.clear();
 }
 
-void setHarmonics() { //S2CA triburst!!!!
+void setHarmonics() { //S2CA triburst! (S2CA = Spark Song Combination Art)
   LEDMatrix.writeSprite(0, 0, reset);
   int dir;
   int temp = getCurrDegree() - currDegree;
@@ -212,9 +221,9 @@ void step() {
     Serial.print("  ");
     Serial.println(Rstuck);
     if (Lstuck > 40 || Rstuck > 40) {
-      Drive(L, -50);
-      Drive(R, -50);
-      delay(15);
+      Drive(L, -70);
+      Drive(R, -70);
+      delay(25);
       Stop(0);
       setHarmonics();
       Lstuck = 0;
@@ -263,8 +272,7 @@ void setup() {
 }
 
 void loop() {
-  int warp = abs(getCurrDegree() - currDegree);
-  if (warp > 180) warp = abs(warp - 360);
+  int warp = getWarp();
   if (warp > 15) setHarmonics();
   Serial.println(getCurrDegree());
   //get measurement data from sensors
@@ -274,13 +282,13 @@ void loop() {
 
   if (dis_left == 0) {
     cnt++;
-    if (cnt == 3 || cnt == 9) {
+    if (cnt == 3 || (cnt == 9 || cnt == 14)) {
       step();
     }
     else {
       Drive(L, 100);
       Drive(R, 100);
-      delay(25);
+      delay(70);
       Stop(100);
       turn(COUNTER_CLOCKWISE);
       step();
