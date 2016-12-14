@@ -1,5 +1,3 @@
-
-
 #include <HMC5883L.h>
 #include <NewPing.h>
 #include <Wire.h>
@@ -132,7 +130,7 @@ int getWarp() {
 
 void turn(int rotate_type) {
   float temp, target = currDegree + (rotate_type ? -90 : 90);
-  int speed = rotate_type ? -70 : 70;
+  int speed = rotate_type ? -60 : 60;
   byte* arrow = rotate_type ? turnleft : turnright;
 
   //LED Indicator
@@ -141,19 +139,23 @@ void turn(int rotate_type) {
   temp = getCurrDegree();
   if (target < 0) target += 360;
   if (target >= 360) target -= 360;
-
-  while (abs(temp - target) >= 5) {
+  
+  Drive(L, speed);
+  Drive(R, -speed);
+  while (!(abs(temp - target) <= 20 || abs(temp - target) >= 340)) {
     temp = getCurrDegree();
-    Serial.println(temp);
-    Drive(L, speed);
-    Drive(R, -speed);
-    delay(50);
-    Stop(70);
+    //Serial.println(temp);
+    //Drive(L, speed);
+    //Drive(R, -speed);
+    //delay(50);
+    //Stop(70);
   }
   Stop(100);
   currDegree += (rotate_type ? -90 : 90);
   if (currDegree < 0) currDegree += 360;
   if (currDegree >= 360) currDegree -= 360;
+  delay(100);
+  setHarmonics();
 
   LEDMatrix.clear();
 }
